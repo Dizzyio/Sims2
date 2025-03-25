@@ -5,6 +5,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+import android.content.Intent;
+
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -82,7 +84,12 @@ public class MainActivity extends AppCompatActivity {
                     String result = "Product: " + productName + "\nQuantity: " + quantity;
                     Toast.makeText(MainActivity.this, result, Toast.LENGTH_LONG).show();
 
-                    // TODO: Transition to results screen with image and add-to-storage button
+                    Intent intent = new Intent(MainActivity.this, ResultActivity.class);
+                    intent.putExtra("productName", productName);
+                    intent.putExtra("quantity", quantity);
+                    intent.putExtra("imageUrl", imageUrl);
+                    startActivity(intent);
+
                 });
             }
 
