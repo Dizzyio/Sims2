@@ -1,0 +1,37 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp">
+
+    <Button
+        android:id="@+id/scanButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Scan Barcode" />
+
+    <Button
+        android:id="@+id/manualButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enter Barcode Manually"
+        android:layout_marginTop="16dp" />
+
+    <EditText
+        android:id="@+id/manualBarcodeInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter barcode number"
+        android:inputType="number"
+        android:visibility="gone"
+        android:layout_marginTop="16dp" />
+
+    <Button
+        android:id="@+id/submitManualCodeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Submit Code"
+        android:layout_marginTop="8dp"
+        android:visibility="gone" />
+</LinearLayout>

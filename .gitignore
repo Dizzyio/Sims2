@@ -1,0 +1,17 @@
+# Android/Java specific
+.gradle/
+.idea/
+*.iml
+/build/
+local.properties
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Log/Crash files
+*.log
+
+# Keystore or secrets (NEVER track these)
+*.jks
+*.keystore
