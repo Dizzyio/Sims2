@@ -34,4 +34,12 @@
         android:text="Submit Code"
         android:layout_marginTop="8dp"
         android:visibility="gone" />
+    <!-- Button to open storage management screen -->
+    <Button
+        android:id="@+id/manageStorageButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Manage Storage Locations"
+        android:layout_marginTop="24dp" />
+
 </LinearLayout>

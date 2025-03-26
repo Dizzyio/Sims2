@@ -30,6 +30,14 @@ public class MainActivity extends AppCompatActivity {
         Button manualEntryButton = findViewById(R.id.manualButton);
         EditText manualBarcodeInput = findViewById(R.id.manualBarcodeInput);
         Button submitManualCodeButton = findViewById(R.id.submitManualCodeButton);
+        Button manageStorageButton = findViewById(R.id.manageStorageButton);
+
+// Opens the storage location setup screen
+        manageStorageButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, StorageActivity.class);
+            startActivity(intent);
+        });
+
 
         // Launches the barcode scanner when the scan button is pressed
         scanButton.setOnClickListener(view -> {

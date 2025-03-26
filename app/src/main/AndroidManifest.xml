@@ -26,6 +26,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".ResultActivity" />
+        <activity android:name=".StorageActivity" />
+
     </application>
 
 </manifest>
