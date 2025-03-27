@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        JsonStorageHelper.initializeIfMissing(getApplicationContext());
         Button scanButton = findViewById(R.id.scanButton);
         Button manualEntryButton = findViewById(R.id.manualButton);
         EditText manualBarcodeInput = findViewById(R.id.manualBarcodeInput);
