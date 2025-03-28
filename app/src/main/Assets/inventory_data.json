@@ -1,7 +1,5 @@
 {
-    "locations": {
-        "Pantry": [],
-        "Fridge": [],
-        "Cold Room": []
-    }
+    "Fridge": [],
+    "Pantry": [],
+    "Cold Room": []
 }

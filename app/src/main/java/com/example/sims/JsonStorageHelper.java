@@ -82,33 +82,48 @@ public class JsonStorageHelper {
     }
 
     // Adds an item to a specific storage location in the JSON structure
-    public static void addItemToStorage(Context context, String location, String productName, String quantity) {
+    // Adds a product to the specified storage location.
+// If the barcode already exists, it increments stockQuantity instead of duplicating.
+    public static void addItemToStorage(Context context, String location, String name, String quantity, String barcode) {
         try {
-            JSONObject root = readJson(context);
-            if (root == null) {
-                root = new JSONObject();
+            JSONObject json = readJson(context);
+            if (json == null) return;
+
+            JSONArray locationItems = json.optJSONArray(location);
+            if (locationItems == null) {
+                locationItems = new JSONArray();
             }
 
-            // Check if location exists; if not, create it
-            JSONArray locationArray = root.optJSONArray(location);
-            if (locationArray == null) {
-                locationArray = new JSONArray();
-                root.put(location, locationArray);
+            boolean itemFound = false;
+
+            // Loop through items to check for existing barcode
+            for (int i = 0; i < locationItems.length(); i++) {
+                JSONObject item = locationItems.getJSONObject(i);
+                if (barcode != null && barcode.equals(item.optString("barcode"))) {
+                    // Item with matching barcode found, increase the quantity
+                    int currentQty = item.optInt("stockQuantity", 1);
+                    item.put("stockQuantity", currentQty + 1);
+                    itemFound = true;
+                    break;
+                }
             }
 
-            // Create new product object
-            JSONObject newItem = new JSONObject();
-            newItem.put("name", productName);
-            newItem.put("quantity", quantity);
+            // If item not found, create a new one
+            if (!itemFound) {
+                JSONObject newItem = new JSONObject();
+                newItem.put("name", name);
+                newItem.put("quantity", quantity);
+                newItem.put("barcode", barcode);
+                newItem.put("stockQuantity", 1);
+                locationItems.put(newItem);
+            }
 
-            // Add to storage array
-            locationArray.put(newItem);
-
-            // Save the changes
-            writeJson(context, root);
+            // Save back to file
+            json.put(location, locationItems);
+            writeJson(context, json);
 
         } catch (JSONException e) {
-            Log.e("JsonHelper", "Failed to add item to storage", e);
+            Log.e("JsonHelper", "Error adding item to storage", e);
         }
     }
 }

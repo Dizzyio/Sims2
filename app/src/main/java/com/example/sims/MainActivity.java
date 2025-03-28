@@ -32,6 +32,14 @@ public class MainActivity extends AppCompatActivity {
         Button submitManualCodeButton = findViewById(R.id.submitManualCodeButton);
         Button manageStorageButton = findViewById(R.id.manageStorageButton);
 
+        // Button to manually add an item (for barcode-less stuff)
+        Button openManualEntryButton = findViewById(R.id.openManualEntryButton);
+        openManualEntryButton.setOnClickListener(view -> {
+            Intent intent = new Intent(MainActivity.this, ManualEntryActivity.class);
+            startActivity(intent);
+        });
+
+
 // Opens the storage location setup screen
         manageStorageButton.setOnClickListener(v -> {
             Intent intent = new Intent(MainActivity.this, StorageActivity.class);
@@ -96,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
                     intent.putExtra("productName", productName);
                     intent.putExtra("quantity", quantity);
                     intent.putExtra("imageUrl", imageUrl);
+                    intent.putExtra("barcode", barcode);
                     startActivity(intent);
 
                 });

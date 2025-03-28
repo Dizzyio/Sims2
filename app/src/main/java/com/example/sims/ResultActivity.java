@@ -1,9 +1,11 @@
 package com.example.sims;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -41,9 +43,34 @@ public class ResultActivity extends AppCompatActivity {
         String productName = getIntent().getStringExtra("productName");
         String quantity = getIntent().getStringExtra("quantity");
         String imageUrl = getIntent().getStringExtra("imageUrl");
+        String barcode = getIntent().getStringExtra("barcode");
 
-        // Display basic info
-        productNameView.setText(productName);
+
+        // Prompt for rename if product name is unknown
+        if ("Unknown Product".equals(productName)) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Product not recognized");
+
+            final EditText input = new EditText(this);
+            input.setHint("Enter custom name");
+            builder.setView(input);
+
+            builder.setPositiveButton("Save", (dialog, which) -> {
+                String newName = input.getText().toString().trim();
+                if (!newName.isEmpty()) {
+                    productNameView.setText(newName);
+                } else {
+                    productNameView.setText("Unnamed Item");
+                }
+            });
+
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+            builder.show();
+        } else {
+            productNameView.setText(productName);
+        }
+
         quantityView.setText(quantity);
         if (imageUrl != null && !imageUrl.isEmpty()) {
             Glide.with(this).load(imageUrl).into(productImageView);
@@ -64,8 +91,9 @@ public class ResultActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String selectedLocation = locationSpinner.getSelectedItem().toString();
+                String finalProductName = productNameView.getText().toString();
 
-                JsonStorageHelper.addItemToStorage(ResultActivity.this, selectedLocation, productName, quantity);
+                JsonStorageHelper.addItemToStorage(ResultActivity.this, selectedLocation, finalProductName, quantity, barcode);
 
                 Toast.makeText(ResultActivity.this, "Item saved to " + selectedLocation, Toast.LENGTH_SHORT).show();
                 finish(); // Optionally return to MainActivity after saving

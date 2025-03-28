@@ -28,6 +28,8 @@
         <activity android:name=".ResultActivity" />
         <activity android:name=".StorageActivity" />
         <activity android:name=".StorageContentsActivity" />
+        <activity android:name=".ManualEntryActivity" />
+
 
 
     </application>

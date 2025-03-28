@@ -1,11 +1,3 @@
-// OpenFoodApiHelper.java
-
-/*
-    This class makes a request to the Open Food Facts API with a given barcode,
-    and then extracts the product name, quantity, and image URL from the JSON response.
-    It returns the result to a callback function so the UI can update once the data arrives.
-*/
-
 package com.example.sims;
 
 import android.util.Log;
@@ -21,6 +13,11 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+/*
+    This class makes a request to the Open Food Facts API with a given barcode,
+    and then extracts the product name, quantity, and image URL from the JSON response.
+    It returns the result to a callback function so the UI can update once the data arrives.
+*/
 public class OpenFoodApiHelper {
 
     public interface ProductCallback {
@@ -53,7 +50,29 @@ public class OpenFoodApiHelper {
                     if (json.getInt("status") == 1) {
                         JSONObject product = json.getJSONObject("product");
 
-                        String name = product.optString("product_name", "Unknown Product");
+                        /*
+                            Try to extract the most complete and human-readable product name.
+                            It checks multiple fields in order and trims each to avoid false-positives
+                            from empty strings.
+                         */
+                        String name = product.optString("product_name_complete", "").trim();
+
+                        if (name.isEmpty()) {
+                            name = product.optString("product_name_with_quantity", "").trim();
+                        }
+
+                        if (name.isEmpty()) {
+                            name = product.optString("product_name_en", "").trim();
+                        }
+
+                        if (name.isEmpty()) {
+                            name = product.optString("product_name", "").trim();
+                        }
+
+                        if (name.isEmpty()) {
+                            name = "Unknown Product";
+                        }
+
                         String quantity = product.optString("quantity", "Unknown Size");
                         String imageUrl = product.optString("image_url", "");
 
