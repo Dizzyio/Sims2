@@ -34,7 +34,6 @@ public class StorageActivity extends AppCompatActivity {
 
         EditText storageNameInput = findViewById(R.id.storageNameInput);
         Button addStorageButton = findViewById(R.id.addStorageButton);
-        Button backToMainButton = findViewById(R.id.backToMainButton);
         ListView storageListView = findViewById(R.id.storageListView);
 
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, storageList);
@@ -78,13 +77,6 @@ public class StorageActivity extends AppCompatActivity {
             } else {
                 Toast.makeText(this, "Please enter a location name", Toast.LENGTH_SHORT).show();
             }
-        });
-
-        // Takes user back to main screen
-        backToMainButton.setOnClickListener(v -> {
-            Intent intent = new Intent(StorageActivity.this, MainActivity.class);
-            startActivity(intent);
-            finish();
         });
 
         // Handle item clicks for edit/delete/view

@@ -2,6 +2,7 @@ package com.example.sims;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 /*
     This activity shows the list of items stored in a specific storage location.
     It supports viewing, renaming, and deleting items from that location.
+    Now also allows clicking items to view detailed info (if barcode is available).
 */
 public class StorageContentsActivity extends AppCompatActivity {
 
@@ -51,21 +53,41 @@ public class StorageContentsActivity extends AppCompatActivity {
 
             new AlertDialog.Builder(this)
                     .setTitle("Modify Item")
-                    .setItems(new CharSequence[]{"Rename", "Edit Quantity", "Delete"}, (dialog, which) -> {
+                    .setItems(new CharSequence[]{"Rename", "Delete"}, (dialog, which) -> {
                         switch (which) {
                             case 0:
                                 showRenameDialog(position);
                                 break;
                             case 1:
-                                showQuantityDialog(position);
-                                break;
-                            case 2:
                                 deleteItem(position);
                                 break;
                         }
                     })
                     .show();
             return true;
+        });
+
+        // Handle normal click to view item details
+        contentsList.setOnItemClickListener((parent, view, position, id) -> {
+            JSONObject json = JsonStorageHelper.readJson(this);
+            if (json != null) {
+                try {
+                    JSONArray items = json.getJSONArray(locationName);
+                    JSONObject item = items.getJSONObject(position);
+
+                    String barcode = item.optString("barcode", null);
+                    if (barcode != null && !barcode.isEmpty()) {
+                        Intent intent = new Intent(StorageContentsActivity.this, ItemDetailActivity.class);
+                        intent.putExtra("barcode", barcode);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(this, "No barcode available for this item", Toast.LENGTH_SHORT).show();
+                    }
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
         });
     }
 
@@ -78,8 +100,10 @@ public class StorageContentsActivity extends AppCompatActivity {
                     JSONObject item = items.getJSONObject(i);
                     String name = item.optString("name", "Unnamed");
                     String quantity = item.optString("quantity", "Unknown Size");
-                    int stockQuantity = item.optInt("stockQuantity", 1);
-                    itemList.add(name + " - Qty: " + stockQuantity + " (" + quantity + ")");
+                    int stockQty = item.optInt("stockQuantity", 1);
+
+                    String display = name + " - Qty: " + stockQty + " (" + quantity + ")";
+                    itemList.add(display);
                 }
                 adapter.notifyDataSetChanged();
             } catch (JSONException e) {
@@ -89,6 +113,7 @@ public class StorageContentsActivity extends AppCompatActivity {
     }
 
     private void deleteItem(int position) {
+        String item = itemList.get(position);
         itemList.remove(position);
         adapter.notifyDataSetChanged();
 
@@ -96,10 +121,19 @@ public class StorageContentsActivity extends AppCompatActivity {
         if (json != null) {
             try {
                 JSONArray items = json.getJSONArray(locationName);
-                items.remove(position);
-                json.put(locationName, items);
+                JSONArray updatedArray = new JSONArray();
+
+                for (int i = 0, j = 0; i < items.length(); i++) {
+                    JSONObject currentItem = items.getJSONObject(i);
+                    String display = currentItem.optString("name", "Unnamed") + " - Qty: " + currentItem.optInt("stockQuantity", 1) + " (" + currentItem.optString("quantity", "Unknown Size") + ")";
+                    if (j < itemList.size() && display.equals(itemList.get(j))) {
+                        updatedArray.put(currentItem);
+                        j++;
+                    }
+                }
+                json.put(locationName, updatedArray);
                 JsonStorageHelper.writeJson(this, json);
-                Toast.makeText(this, "Item deleted.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Deleted: " + item, Toast.LENGTH_SHORT).show();
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -108,6 +142,7 @@ public class StorageContentsActivity extends AppCompatActivity {
 
     private void showRenameDialog(int position) {
         String oldDisplay = itemList.get(position);
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Rename Item");
 
@@ -134,44 +169,6 @@ public class StorageContentsActivity extends AppCompatActivity {
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                }
-            }
-        });
-
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-        builder.show();
-    }
-
-    private void showQuantityDialog(int position) {
-        String oldDisplay = itemList.get(position);
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Edit Quantity");
-
-        final EditText input = new EditText(this);
-        input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
-        builder.setView(input);
-
-        builder.setPositiveButton("Save", (dialog, which) -> {
-            String newQtyStr = input.getText().toString().trim();
-            if (!newQtyStr.isEmpty()) {
-                try {
-                    int newQty = Integer.parseInt(newQtyStr);
-                    JSONObject json = JsonStorageHelper.readJson(this);
-                    if (json != null) {
-                        JSONArray items = json.getJSONArray(locationName);
-                        JSONObject item = items.getJSONObject(position);
-                        item.put("stockQuantity", newQty);
-                        JsonStorageHelper.writeJson(this, json);
-
-                        String updatedDisplay = item.optString("name", "Unnamed") + " - Qty: " + newQty + " (" + item.optString("quantity", "Unknown Size") + ")";
-                        itemList.set(position, updatedDisplay);
-                        adapter.notifyDataSetChanged();
-
-                        Toast.makeText(this, "Quantity updated to: " + newQty, Toast.LENGTH_SHORT).show();
-                    }
-                } catch (NumberFormatException | JSONException e) {
-                    Toast.makeText(this, "Invalid number.", Toast.LENGTH_SHORT).show();
                 }
             }
         });
