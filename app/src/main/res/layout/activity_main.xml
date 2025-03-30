@@ -7,24 +7,36 @@
 
     <Button
         android:id="@+id/scanButton"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Scan Barcode" />
+        android:text="Scan Barcode"
+        android:layout_marginTop="8dp"
+        android:padding="12dp"
+        android:textSize="18sp"
+        android:backgroundTint="@color/purple_500"
+        android:textColor="@android:color/white" />
 
     <Button
         android:id="@+id/manualButton"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Enter Barcode Manually"
-        android:layout_marginTop="16dp" />
+        android:layout_marginTop="16dp"
+        android:padding="12dp"
+        android:textSize="18sp"
+        android:backgroundTint="@color/purple_500"
+        android:textColor="@android:color/white" />
 
     <Button
         android:id="@+id/openManualEntryButton"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Add Item Manually"
-        android:layout_marginTop="16dp" />
-
+        android:layout_marginTop="16dp"
+        android:padding="12dp"
+        android:textSize="18sp"
+        android:backgroundTint="@color/purple_500"
+        android:textColor="@android:color/white" />
 
     <EditText
         android:id="@+id/manualBarcodeInput"
@@ -37,17 +49,37 @@
 
     <Button
         android:id="@+id/submitManualCodeButton"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Submit Code"
         android:layout_marginTop="8dp"
-        android:visibility="gone" />
-    <!-- Button to open storage management screen -->
+        android:visibility="gone"
+        android:padding="12dp"
+        android:textSize="18sp"
+        android:backgroundTint="@color/purple_500"
+        android:textColor="@android:color/white" />
+
     <Button
         android:id="@+id/manageStorageButton"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Manage Storage Locations"
-        android:layout_marginTop="24dp" />
+        android:layout_marginTop="24dp"
+        android:padding="12dp"
+        android:textSize="18sp"
+        android:backgroundTint="@color/purple_500"
+        android:textColor="@android:color/white" />
+
+    <Button
+        android:id="@+id/syncButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Sync Now"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="8dp"
+        android:padding="12dp"
+        android:textSize="18sp"
+        android:backgroundTint="@color/purple_500"
+        android:textColor="@android:color/white" />
 
 </LinearLayout>

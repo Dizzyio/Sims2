@@ -19,9 +19,15 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name">
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/json" />
+            </intent-filter>
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -30,10 +36,25 @@
         <activity android:name=".StorageContentsActivity" />
         <activity android:name=".ManualEntryActivity" />
         <activity android:name=".ItemDetailActivity" />
+        <activity android:name=".SyncActivity" />
 
 
 
+
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.sims.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
+
+
+
 
 </manifest>
