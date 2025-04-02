@@ -4,3 +4,16 @@
         name="external_cache"
         path="." />
 </paths>
+    <!--
+        file_paths.xml – a sneaky but crucial config file for Android’s FileProvider system.
+
+        This XML isn’t part of the UI—it tells Android which files we’re *allowed* to share with other apps.
+        Think of it like a hall pass: without it, the system throws a tantrum and blocks your file sharing attempts
+        like a lunch lady guarding the last tray of nuggets.
+
+        In our case, we're using <external-cache-path> to safely point to the app’s external cache directory.
+        This is where we temporarily drop the JSON file when the user wants to sync or export inventory data.
+        By declaring it here, Android knows it’s cool to hand off that file to Bluetooth, Nearby Share, etc.
+
+        TL;DR: Without this file, your “Share Inventory” button would be nothing more than an elaborate prank.
+    -->

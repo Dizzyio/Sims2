@@ -1,3 +1,9 @@
+// --- ITEM DETAIL ACTIVITY ---
+// This class handles the detail screen that shows up when a user taps an item with a barcode.
+// Think of it like turning over a box in your pantry to read the nutrition label and ingredients—except we cheat by pulling the data from Open Food Facts.
+// This screen displays: name, brand, nutrition, ingredients, allergens, NutriScore, NOVA group, origin, stores, and product image.
+// It sends an API request, parses the result, and updates the screen on the main thread.
+
 package com.example.sims;
 
 import android.os.Bundle;
@@ -20,17 +26,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-/*
-    This activity shows detailed product information by using the saved barcode.
-    It fetches data from the Open Food Facts API and displays:
-    - Full product name, brand, quantity
-    - Nutrition info (calories, fat, sugar, salt)
-    - Ingredients, allergens, Nutri-Score, NOVA Group
-    - Product origin and store availability
-    - Product image
-*/
 public class ItemDetailActivity extends AppCompatActivity {
 
+    // These are the visual pieces of our screen: title at the top, detail text block, and an image
     private TextView titleView, detailsView;
     private ImageView productImage;
 
@@ -39,34 +37,41 @@ public class ItemDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item_detail);
 
+        // Grab UI elements by their IDs
         titleView = findViewById(R.id.detailTitle);
         detailsView = findViewById(R.id.detailText);
         productImage = findViewById(R.id.detailImage);
 
+        // This barcode comes from the last screen. Without it, we can’t do anything.
         String barcode = getIntent().getStringExtra("barcode");
 
         if (barcode == null || barcode.isEmpty()) {
+            // User somehow got here without a barcode? No point continuing.
             Toast.makeText(this, "No barcode provided.", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
+        // Fire off the data fetch using that barcode
         fetchProductDetails(barcode);
     }
 
-    // Pulls product info and updates the detail view with useful fields
+    // This function does all the heavy lifting: reaches out to the API, parses the response,
+    // and updates the screen with the product info
     private void fetchProductDetails(String barcode) {
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient(); // Think of this like a mailman for HTTP requests
         String url = "https://world.openfoodfacts.org/api/v2/product/" + barcode + ".json";
 
-        Request request = new Request.Builder().url(url).build();
+        Request request = new Request.Builder().url(url).build(); // Building the request like an envelope
 
         client.newCall(request).enqueue(new Callback() {
+            // If the call fails (e.g., no internet), we give the user a heads-up
             @Override
             public void onFailure(Call call, IOException e) {
                 runOnUiThread(() -> Toast.makeText(ItemDetailActivity.this, "API request failed.", Toast.LENGTH_SHORT).show());
             }
 
+            // If the call succeeds, we try to unpack the box and display the goodies
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (!response.isSuccessful()) {
@@ -75,9 +80,11 @@ public class ItemDetailActivity extends AppCompatActivity {
                 }
 
                 try {
+                    // Crack open the JSON response and pull out what we care about
                     JSONObject root = new JSONObject(response.body().string());
                     JSONObject product = root.getJSONObject("product");
 
+                    // Grab all the product details we want to show
                     String name = product.optString("product_name", "Unknown Product");
                     String brand = product.optString("brands", "N/A");
                     String quantity = product.optString("quantity", "");
@@ -90,7 +97,8 @@ public class ItemDetailActivity extends AppCompatActivity {
                     String origin = product.optString("origins", "Unknown");
                     String stores = product.optString("stores", "");
 
-                    // Build detailed nutrition view from top keys
+                    // Build a human-readable nutrition breakdown
+                    // This is where we turn "nutriments.energy-kcal_100g" into "Calories: 320 kcal/100g"
                     StringBuilder nutritionDetails = new StringBuilder();
                     JSONObject nutrients = product.optJSONObject("nutriments");
                     if (nutrients != null) {
@@ -102,7 +110,8 @@ public class ItemDetailActivity extends AppCompatActivity {
                         nutritionDetails.append("No nutrition data available.\n");
                     }
 
-                    // Format the final block of info
+                    // Now build the full detail block for the text view
+                    // Basically a big sandwich of everything we found
                     StringBuilder details = new StringBuilder();
                     details.append("Brand: ").append(brand).append("\n");
                     details.append("Quantity: ").append(quantity).append("\n");
@@ -117,7 +126,7 @@ public class ItemDetailActivity extends AppCompatActivity {
                     details.append("Allergens: ").append(allergens).append("\n\n");
                     details.append("Nutrition Info:\n").append(nutritionDetails);
 
-                    // Push everything to the UI
+                    // Finally, we can now show all this on the screen (but ONLY on the UI thread)
                     runOnUiThread(() -> {
                         titleView.setText(name);
                         detailsView.setText(details.toString());

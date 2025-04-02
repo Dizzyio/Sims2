@@ -1,3 +1,9 @@
+// --- SYNC HELPER ---
+// This class handles merging two different JSON inventories, applying logic to avoid double-counting.
+// Basically, imagine two roommates updating the pantry list at the same time. This class makes sure you don't end up with 12 boxes of pasta when you only meant to get 6.
+// It calculates: new = yours + theirs - what we already counted last time. That last part is key.
+// It also gracefully handles stuff that only shows up on one device, which is harder than it sounds.
+
 package com.example.sims;
 
 import android.content.Context;
@@ -14,16 +20,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-/*
-    This class handles syncing two JSON files by applying conflict resolution logic:
-    newStock = yours + theirs - houseCount
-    It now also handles edge cases where one device has locations the other doesn't.
-*/
 public class SyncHelper {
 
-    // Entry point for syncing using a URI (shared file via intent)
+    // Entry point: called when a sync file is received (e.g. Nearby Share).
+    // Does all the merging and conflict resolution.
     public static void performSync(Context context, Uri externalFileUri) {
         try {
+            // Pull in all three JSON blobs: local, incoming, and the historical 'house count' used for diffing
             JSONObject localJson = JsonStorageHelper.readJson(context);
             JSONObject externalJson = readJsonFromUri(context, externalFileUri);
             JSONObject previousHouseCount = readHouseCountJson(context);
@@ -36,11 +39,12 @@ public class SyncHelper {
             JSONObject mergedJson = new JSONObject();
             JSONObject newHouseCount = new JSONObject();
 
-            // Merge all locations from both local and external files
+            // Union of all storage locations found in either file (handles new/unknown spots)
             Set<String> allLocations = new HashSet<>();
             allLocations.addAll(toKeySet(localJson));
             allLocations.addAll(toKeySet(externalJson));
 
+            // Now for each location, merge its inventory
             for (String location : allLocations) {
                 JSONArray localItems = localJson.optJSONArray(location);
                 JSONArray externalItems = externalJson.optJSONArray(location);
@@ -49,6 +53,7 @@ public class SyncHelper {
                 if (localItems == null) localItems = new JSONArray();
                 if (externalItems == null) externalItems = new JSONArray();
 
+                // Loop through local items and find their counterpart in the external set
                 for (int i = 0; i < localItems.length(); i++) {
                     JSONObject localItem = localItems.getJSONObject(i);
                     String barcode = localItem.optString("barcode", null);
@@ -56,12 +61,15 @@ public class SyncHelper {
                     String quantity = localItem.optString("quantity");
                     int localCount = localItem.optInt("stockQuantity", 1);
 
+                    // Try to find a matching item in the incoming list
                     JSONObject externalItem = findByBarcode(externalItems, barcode);
                     int externalCount = externalItem != null ? externalItem.optInt("stockQuantity", 1) : 0;
 
+                    // Find the previous agreed-upon quantity, if any
                     JSONObject prev = findByBarcode(previousHouseCount.optJSONArray(location), barcode);
                     int oldHouseCount = prev != null ? prev.optInt("stockQuantity", 0) : 0;
 
+                    // Do the sync math: (you + them - last known shared state)
                     int newCount = localCount + externalCount - oldHouseCount;
 
                     JSONObject mergedItem = new JSONObject();
@@ -72,11 +80,11 @@ public class SyncHelper {
                     mergedArray.put(mergedItem);
                 }
 
-                // Also check for any external-only items
+                // Now add items that *only* exist in the incoming file
                 for (int i = 0; i < externalItems.length(); i++) {
                     JSONObject externalItem = externalItems.getJSONObject(i);
                     String barcode = externalItem.optString("barcode", null);
-                    if (findByBarcode(mergedArray, barcode) != null) continue;
+                    if (findByBarcode(mergedArray, barcode) != null) continue; // Already merged
 
                     String name = externalItem.optString("name");
                     String quantity = externalItem.optString("quantity");
@@ -85,7 +93,7 @@ public class SyncHelper {
                     JSONObject prev = findByBarcode(previousHouseCount.optJSONArray(location), barcode);
                     int oldHouseCount = prev != null ? prev.optInt("stockQuantity", 0) : 0;
 
-                    int newCount = externalCount - oldHouseCount;
+                    int newCount = externalCount - oldHouseCount; // Since local didn't know this existed
 
                     JSONObject mergedItem = new JSONObject();
                     mergedItem.put("name", name);
@@ -110,7 +118,7 @@ public class SyncHelper {
         }
     }
 
-    // Reads the shared file into a JSON object
+    // Reads incoming file URI and parses it into a JSONObject
     private static JSONObject readJsonFromUri(Context context, Uri uri) throws IOException, JSONException {
         InputStream inputStream = context.getContentResolver().openInputStream(uri);
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -121,7 +129,7 @@ public class SyncHelper {
         return new JSONObject(sb.toString());
     }
 
-    // Converts a JSONObject to a Set of keys for looping
+    // Helper that gives us all the keys from a JSON object as a Set so we can loop them
     private static Set<String> toKeySet(JSONObject obj) {
         Set<String> keys = new HashSet<>();
         if (obj == null) return keys;
@@ -130,7 +138,7 @@ public class SyncHelper {
         return keys;
     }
 
-    // Finds a product in a list based on barcode
+    // Used to find matching item in an array by its barcode (our main unique identifier)
     private static JSONObject findByBarcode(JSONArray array, String barcode) throws JSONException {
         if (array == null || barcode == null) return null;
         for (int i = 0; i < array.length(); i++) {
@@ -140,7 +148,7 @@ public class SyncHelper {
         return null;
     }
 
-    // Load previous snapshot
+    // Reads the saved housecount file that keeps track of our last known shared state
     private static JSONObject readHouseCountJson(Context context) {
         File file = new File(context.getFilesDir(), "housecount.json");
         if (!file.exists()) return new JSONObject();
@@ -158,7 +166,7 @@ public class SyncHelper {
         }
     }
 
-    // Save updated snapshot
+    // Writes the new snapshot after syncing so we can subtract it next time
     private static void writeHouseCountJson(Context context, JSONObject houseCountJson) {
         File file = new File(context.getFilesDir(), "housecount.json");
         try (FileOutputStream fos = new FileOutputStream(file)) {

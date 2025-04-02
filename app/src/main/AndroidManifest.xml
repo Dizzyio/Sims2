@@ -1,9 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    AndroidManifest.xml – the mothership of your app's existence.
+
+    This file is kind of like your app’s resume—it tells Android what your app is allowed to do (like access the camera or the internet),
+    what screens (Activities) it has, what should launch first, and how it should handle shared files or deep links.
+
+    🔒 Permissions:
+    - CAMERA: Required for barcode scanning (ZXing).
+    - INTERNET: Needed to fetch product info from the Open Food Facts API.
+
+    🧭 Activities:
+    These lines tell Android what "pages" exist in your app. No declaration = no navigation.
+    It doesn’t matter if you built the prettiest layout file in the world—if it’s not in the manifest, Android will straight-up pretend it doesn’t exist.
+    That means no way to open the screen via Intent, no crash message, just a silent fail.
+
+    🧠 Think of it like this: each `<activity>` tag is a map pin. If your app is a road trip, this file is the GPS telling Android where all your destinations are.
+
+    📎 FileProvider:
+    Lets us share files (like JSON data) with other apps via a safe URI-based system. Uses file_paths.xml to decide what’s sharable.
+
+    TL;DR: This isn’t optional boilerplate. The Manifest is your app’s spine—no spine, no movement.
+-->
+
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
-
 
     <application
         android:allowBackup="true"
@@ -15,11 +39,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Sims"
         tools:targetApi="31">
+
+        <!-- MainActivity handles barcode scans, manual entries, and starting everything off -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name">
 
+            <!-- This makes the app launchable and able to receive .json files -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -31,17 +58,29 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 🔧 SUPPORTING PAGES (Activities) - ALL MUST BE DECLARED OR THEY WON'T WORK -->
+
+        <!-- ResultActivity: Shows product details after a scan or manual barcode entry -->
+        <!-- If not declared: App crashes or silently fails when trying to open this screen -->
         <activity android:name=".ResultActivity" />
+
+        <!-- StorageActivity: Lets user create/view/delete storage locations like "Pantry", "Freezer" -->
         <activity android:name=".StorageActivity" />
+
+        <!-- StorageContentsActivity: Shows what’s inside a selected storage location -->
         <activity android:name=".StorageContentsActivity" />
+
+        <!-- ManualEntryActivity: Adds items with no barcode, like homemade stuff -->
         <activity android:name=".ManualEntryActivity" />
+
+        <!-- ItemDetailActivity: Deep dive into nutritional info, allergens, etc. from the API -->
         <activity android:name=".ItemDetailActivity" />
+
+        <!-- SyncActivity: Handles importing/exporting JSON to share inventory with others -->
         <activity android:name=".SyncActivity" />
 
-
-
-
-
+        <!-- FileProvider: Grants temporary access to shared files like exported JSON -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.example.sims.fileprovider"
@@ -53,8 +92,4 @@
         </provider>
 
     </application>
-
-
-
-
 </manifest>

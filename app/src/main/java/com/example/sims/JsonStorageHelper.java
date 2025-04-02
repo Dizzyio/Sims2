@@ -1,3 +1,11 @@
+// --- JSON STORAGE HELPER ---
+// Helpers in programming are like your sidekicks—they’re not the main hero on screen,
+// but they quietly handle all the dirty work behind the scenes. This one in particular manages our inventory file.
+// Think of this as the class that checks if the storage file exists, reads it, writes to it, and keeps things from exploding.
+// If we didn’t have this guy doing the file wrangling, every read/write would be chaos and duplication hell.
+//
+// The format is JSON, and the file is local—no cloud, no server.
+
 package com.example.sims;
 
 import android.content.Context;
@@ -15,16 +23,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-/*
-    This helper class manages reading, initializing, and writing to the inventory JSON file.
-    It checks if the file exists in internal storage. If not, it copies the default version from assets.
-    Provides methods for loading and saving the data as a JSONObject.
- */
 public class JsonStorageHelper {
 
+    // This is the name of the inventory file we read/write from internal storage
     private static final String FILE_NAME = "inventory_data.json";
 
-    // Checks for existing file in internal storage, copies from assets if missing
+    /*
+        Checks if the inventory file exists in app storage.
+        If not, it copies a fresh copy from the assets folder.
+        Think of this like setting up the first save file when the app is run the first time.
+     */
     public static void initializeIfMissing(Context context) {
         File file = new File(context.getFilesDir(), FILE_NAME);
         if (!file.exists()) {
@@ -46,7 +54,11 @@ public class JsonStorageHelper {
         }
     }
 
-    // Reads and returns the entire file as a JSONObject
+    /*
+        Opens and reads the JSON file from internal storage.
+        Returns it as a JSONObject so other parts of the app can work with it.
+        If the file is corrupted or missing, this quietly returns null instead of crashing.
+     */
     public static JSONObject readJson(Context context) {
         File file = new File(context.getFilesDir(), FILE_NAME);
         try {
@@ -65,15 +77,19 @@ public class JsonStorageHelper {
         }
     }
 
-    // Saves the provided JSONObject back to the file
+    /*
+        Saves the given JSONObject to our inventory file.
+        If it fails to pretty-print (with indentation), it will still save using plain .toString()
+        Think of this like hitting 'save' in a video game. We don't want to lose your progress.
+     */
     public static void writeJson(Context context, JSONObject jsonObject) {
         File file = new File(context.getFilesDir(), FILE_NAME);
         try {
             FileOutputStream fos = new FileOutputStream(file);
             try {
-                fos.write(jsonObject.toString(4).getBytes()); // Pretty print
+                fos.write(jsonObject.toString(4).getBytes()); // Save with indentation
             } catch (JSONException e) {
-                fos.write(jsonObject.toString().getBytes()); // Fallback if indentation fails
+                fos.write(jsonObject.toString().getBytes()); // Backup plan if formatting fails
             }
             fos.close();
         } catch (IOException e) {
@@ -81,9 +97,12 @@ public class JsonStorageHelper {
         }
     }
 
-    // Adds an item to a specific storage location in the JSON structure
-    // Adds a product to the specified storage location.
-// If the barcode already exists, it increments stockQuantity instead of duplicating.
+    /*
+        Adds a product to a specific storage location.
+        If the same barcode already exists at that location, it increases the quantity instead of duplicating.
+        If it’s new, it builds the object with all the key info: name, quantity, barcode, and sets stockQuantity to 1.
+        Think of this as the auto-restock logic that avoids accidentally showing "Coke" ten times in a row.
+     */
     public static void addItemToStorage(Context context, String location, String name, String quantity, String barcode) {
         try {
             JSONObject json = readJson(context);
@@ -96,11 +115,12 @@ public class JsonStorageHelper {
 
             boolean itemFound = false;
 
-            // Loop through items to check for existing barcode
+            // Loop through everything already in that storage location
+            // This is like scanning all the items on a shelf to see if you've already got the one you're holding
             for (int i = 0; i < locationItems.length(); i++) {
                 JSONObject item = locationItems.getJSONObject(i);
                 if (barcode != null && barcode.equals(item.optString("barcode"))) {
-                    // Item with matching barcode found, increase the quantity
+                    // Matching barcode found. Add 1 to the count instead of creating a duplicate.
                     int currentQty = item.optInt("stockQuantity", 1);
                     item.put("stockQuantity", currentQty + 1);
                     itemFound = true;
@@ -108,7 +128,7 @@ public class JsonStorageHelper {
                 }
             }
 
-            // If item not found, create a new one
+            // If no match found, treat it as a brand new item
             if (!itemFound) {
                 JSONObject newItem = new JSONObject();
                 newItem.put("name", name);
@@ -118,7 +138,7 @@ public class JsonStorageHelper {
                 locationItems.put(newItem);
             }
 
-            // Save back to file
+            // Save it all back to the file
             json.put(location, locationItems);
             writeJson(context, json);
 
